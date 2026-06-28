@@ -1,0 +1,20 @@
+{
+    "rules": {
+      "users": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['uid', 'displayName', 'email'])"
+        }
+      },
+      "assessments": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          "$assessmentId": {
+            ".validate": "newData.hasChildren(['assessmentId', 'uid', 'email', 'score', 'riskLevel', 'createdAt']) && newData.child('uid').val() === $uid"
+          }
+        }
+      }
+    }
+  }
