@@ -63,4 +63,5 @@ export type ScreenName =
   | 'recommendations'
   | 'history'
   | 'profile'
-  | 'journey';
+  | 'journey'
+  | 'admin';
