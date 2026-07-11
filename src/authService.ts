@@ -38,7 +38,7 @@ async function saveAuthProfile(fbUser: FirebaseUser, nameOverride?: string): Pro
     uid: fbUser.uid,
     displayName: nameOverride || fbUser.displayName || 'Pengguna Lumina',
     email: fbUser.email || '',
-    photoURL: fbUser.photoURL || '',
+    photoURL: fbUser.photoURL || DEFAULT_AVATAR,
     lastLogin: new Date().toISOString(),
   };
   await set(ref(db, `users/${fbUser.uid}`), profile);
@@ -52,7 +52,7 @@ export async function signInWithGoogle(): Promise<User> {
   return toAppUser(result.user);
 }
 
-// ── Email & Password: Masuk (harus sudah terdaftar) ──
+// ── Email & Password: Masuk ──
 export async function signInWithEmail(email: string, password: string): Promise<User> {
   const result = await signInWithEmailAndPassword(auth, email, password);
   await saveAuthProfile(result.user);
@@ -60,7 +60,11 @@ export async function signInWithEmail(email: string, password: string): Promise<
 }
 
 // ── Email & Password: Daftar akun baru ──
-export async function signUpWithEmail(email: string, password: string, name: string): Promise<User> {
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  name: string
+): Promise<User> {
   const result = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(result.user, { displayName: name });
   await saveAuthProfile(result.user, name);
@@ -78,7 +82,9 @@ export async function signOutUser(): Promise<void> {
 }
 
 // ── Listener status login (dipakai AuthContext) ──
-export function subscribeToAuthChanges(callback: (user: User | null) => void): () => void {
+export function subscribeToAuthChanges(
+  callback: (user: User | null) => void
+): () => void {
   return onAuthStateChanged(auth, (fbUser) => {
     callback(fbUser ? toAppUser(fbUser) : null);
   });
