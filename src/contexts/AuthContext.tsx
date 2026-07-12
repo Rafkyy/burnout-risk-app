@@ -23,6 +23,12 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Terjemahkan kode error Firebase Auth ke pesan Bahasa Indonesia yang ramah pengguna
 function mapAuthError(err: unknown): string {
+  // Tangkap error message biasa (bukan Firebase code)
+  const message = (err as { message?: string })?.message || '';
+  if (message.includes('Android')) {
+    return 'Login Google tidak tersedia di aplikasi ini. Silakan gunakan email dan password.';
+  }
+
   const code = (err as { code?: string })?.code || '';
   switch (code) {
     case 'auth/user-not-found':

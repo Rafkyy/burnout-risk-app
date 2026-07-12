@@ -1,12 +1,3 @@
-# ============================================================
-# BURNOUT RISK PREDICTION - BACKEND API
-# Framework  : FastAPI
-# Model      : RandomForestRegressor (scikit-learn 1.6.1)
-# Features   : Gender, Company Type, WFH Setup Available,
-#              Designation, Resource Allocation, Mental Fatigue Score
-# Deploy ke  : Render.com (gratis)
-# ============================================================
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -16,9 +7,6 @@ import joblib
 import shap
 import os
 
-# ============================================================
-# LOAD MODEL & PREPROCESSOR
-# ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 try:
