@@ -45,6 +45,10 @@ async function saveAuthProfile(fbUser: FirebaseUser, nameOverride?: string): Pro
   console.log('✅ Profil auth tersimpan ke Firebase:', profile.email);
 }
 
+function isAndroidWebView(): boolean {
+  const ua = navigator.userAgent || '';
+  return /wv/.test(ua) && /Android/.test(ua);
+}
 // ── Google Login ──
 export async function signInWithGoogle(): Promise<User> {
   // Tolak jika di Android WebView
@@ -52,7 +56,8 @@ export async function signInWithGoogle(): Promise<User> {
     throw new Error('Login Google tidak tersedia di Android. Gunakan email dan password.');
   }
   const result = await signInWithPopup(auth, googleProvider);
-  ...
+    await saveAuthProfile(result.user);
+    return toAppUser(result.user);
 }
 
 // ── Email & Password: Masuk ──
