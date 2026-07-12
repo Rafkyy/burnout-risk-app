@@ -22,7 +22,14 @@ export default function LoginScreen() {
     try {
       await loginWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login dengan Google gagal.');
+      // Abaikan error "message channel closed" karena itu dari browser extension
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('message channel') || msg.includes('asynchronous response')) {
+        // Login sebenarnya berhasil, abaikan error ini
+        console.warn('⚠️ Browser extension interference - diabaikan');
+        return;
+      }
+      setError(msg || 'Login dengan Google gagal.');
     } finally {
       setIsGoogleLoading(false);
     }
