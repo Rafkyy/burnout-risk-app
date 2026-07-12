@@ -47,9 +47,12 @@ async function saveAuthProfile(fbUser: FirebaseUser, nameOverride?: string): Pro
 
 // ── Google Login ──
 export async function signInWithGoogle(): Promise<User> {
+  // Tolak jika di Android WebView
+  if (isAndroidWebView()) {
+    throw new Error('Login Google tidak tersedia di Android. Gunakan email dan password.');
+  }
   const result = await signInWithPopup(auth, googleProvider);
-  await saveAuthProfile(result.user);
-  return toAppUser(result.user);
+  ...
 }
 
 // ── Email & Password: Masuk ──

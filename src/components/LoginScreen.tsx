@@ -26,7 +26,7 @@ export default function LoginScreen() {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('message channel') || msg.includes('asynchronous response')) {
         // Login sebenarnya berhasil, abaikan error ini
-        console.warn('⚠️ Browser extension interference - diabaikan');
+        console.warn('Browser extension interference - diabaikan');
         return;
       }
       setError(msg || 'Login dengan Google gagal.');
