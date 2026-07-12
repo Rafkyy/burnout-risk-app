@@ -7,15 +7,19 @@ import {
   resetPassword,
   signOutUser,
   subscribeToAuthChanges,
+  updateDisplayName,
 } from '../authService';
+import { checkIsAdmin } from '../masterDataService';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   registerWithEmail: (email: string, password: string, name: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -40,14 +44,19 @@ function mapAuthError(err: unknown): string {
       return 'Terlalu banyak percobaan gagal. Coba lagi beberapa saat lagi.';
     case 'auth/popup-closed-by-user':
       return 'Login dibatalkan.';
-    default:
-      return 'Terjadi kesalahan. Silakan coba lagi.';
+    case 'auth/network-request-failed':
+      return 'Koneksi internet bermasalah. Periksa jaringan Anda lalu coba lagi.';
+    default: {
+      const msg = (err as { message?: string })?.message;
+      return msg && !msg.startsWith('Firebase') ? msg : 'Terjadi kesalahan. Silakan coba lagi.';
+    }
   }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((fbUser) => {
@@ -56,6 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     return unsubscribe;
   }, []);
+
+  // Cek status admin setiap kali user berubah
+  useEffect(() => {
+    let active = true;
+    if (user?.uid) {
+      checkIsAdmin(user.uid).then((result) => {
+        if (active) setIsAdmin(result);
+      });
+    } else {
+      setIsAdmin(false);
+    }
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
 
   const loginWithGoogle = async () => {
     try {
@@ -89,14 +113,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateName = async (name: string) => {
+    try {
+      setUser(await updateDisplayName(name));
+    } catch (err) {
+      throw new Error(mapAuthError(err));
+    }
+  };
+
   const logout = async () => {
     await signOutUser();
     setUser(null);
+    setIsAdmin(false);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, loginWithGoogle, loginWithEmail, registerWithEmail, forgotPassword, logout }}
+      value={{ user, loading, isAdmin, loginWithGoogle, loginWithEmail, registerWithEmail, forgotPassword, updateName, logout }}
     >
       {children}
     </AuthContext.Provider>

@@ -14,8 +14,8 @@ export default function RecommendationScreen({ onBack, result, onSaveResult }: R
   
   const [recommendations, setRecommendations] = useState(
     activeResult?.recommendations || [
-      { id: 'rec_1', title: 'Kurangi beban kerja', desc: 'Prioritaskan tugas utama dan delegasikan jika memungkinkan.', completed: true, category: 'Tinggi' },
-      { id: 'rec_2', title: 'Atur jadwal istirahat', desc: 'Ambil jeda singkat setiap beberapa jam kerja.', completed: true, category: 'Sedang' },
+      { id: 'rec_1', title: 'Kurangi beban kerja', desc: 'Prioritaskan tugas utama dan delegasikan jika memungkinkan.', completed: false, category: 'Tinggi' },
+      { id: 'rec_2', title: 'Atur jadwal istirahat', desc: 'Ambil jeda singkat setiap beberapa jam kerja.', completed: false, category: 'Sedang' },
       { id: 'rec_3', title: 'Diskusi dengan HR/Manager', desc: 'Bicarakan tantangan dan cari solusi bersama.', completed: false, category: 'Tinggi' },
       { id: 'rec_4', title: 'Evaluasi WFH setup', desc: 'Pastikan ruang kerja nyaman dan bebas gangguan.', completed: false, category: 'Rendah' },
       { id: 'rec_5', title: 'Lakukan hobi di luar kerja', desc: 'Luangkan waktu untuk kegiatan yang menyenangkan.', completed: false, category: 'Sedang' },

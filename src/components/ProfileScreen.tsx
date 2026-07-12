@@ -1,34 +1,40 @@
 import React, { useState } from 'react';
-import { User as UserIcon, LogOut, ShieldAlert, ChevronLeft, ChevronRight, Edit2, Shield, Bell, CheckCircle2 } from 'lucide-react';
+import { User as UserIcon, LogOut, ShieldAlert, ChevronLeft, ChevronRight, Edit2, Shield, Bell, CheckCircle2, Loader2 } from 'lucide-react';
 import { User } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileScreenProps {
   currentUser: User;
-  onUpdateProfile: (updated: User) => void;
   onLogout: () => void;
   onBack?: () => void;
 }
 
 export default function ProfileScreen({
   currentUser,
-  onUpdateProfile,
   onLogout,
   onBack,
 }: ProfileScreenProps) {
+  const { updateName } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
-  const [editEmail, setEditEmail] = useState(currentUser.email);
+  const [savingName, setSavingName] = useState(false);
+  const [editError, setEditError] = useState('');
   const [showNotifySetting, setShowNotifySetting] = useState(false);
   const [notifySetting, setNotifySetting] = useState(true);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  // Nama disimpan PERMANEN ke Firebase Auth + database (bukan hanya state lokal)
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateProfile({
-      ...currentUser,
-      name: editName,
-      email: editEmail,
-    });
-    setIsEditing(false);
+    setEditError('');
+    setSavingName(true);
+    try {
+      await updateName(editName);
+      setIsEditing(false);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Gagal menyimpan nama.');
+    } finally {
+      setSavingName(false);
+    }
   };
 
   return (
@@ -107,23 +113,34 @@ export default function ProfileScreen({
                 <input
                   type="email"
                   id="edit-email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0A0B0D] border border-white/10 rounded-xl text-xs font-medium text-white focus:border-elegant-gold/50 outline-none transition"
-                  required
+                  value={currentUser.email}
+                  readOnly
+                  disabled
+                  className="w-full px-3 py-2 bg-[#0A0B0D]/60 border border-white/5 rounded-xl text-xs font-medium text-slate-500 outline-none cursor-not-allowed"
                 />
+                <p className="text-[9px] text-slate-500">Email terikat pada akun login dan tidak dapat diubah dari sini.</p>
               </div>
             </div>
+            {editError && (
+              <div className="p-2.5 bg-rose-950/40 text-rose-300 border border-rose-500/20 text-[11px] rounded-xl font-medium">
+                {editError}
+              </div>
+            )}
             <div className="flex gap-2 justify-end pt-2 text-xs font-semibold">
               <button
                 type="button"
-                onClick={() => setIsEditing(false)}
+                onClick={() => { setIsEditing(false); setEditError(''); setEditName(currentUser.name); }}
                 className="px-3 py-1.5 border border-slate-700 hover:bg-white/5 text-slate-400 rounded-lg text-[11px]"
               >
                 Batal
               </button>
-              <button type="submit" className="px-4 py-1.5 bg-gradient-to-r from-elegant-gold to-elegant-gold-dark text-black font-extrabold rounded-lg text-[11px] uppercase tracking-wider">
-                Simpan
+              <button
+                type="submit"
+                disabled={savingName}
+                className="px-4 py-1.5 bg-gradient-to-r from-elegant-gold to-elegant-gold-dark text-black font-extrabold rounded-lg text-[11px] uppercase tracking-wider disabled:opacity-60 flex items-center gap-1.5"
+              >
+                {savingName && <Loader2 className="w-3 h-3 animate-spin" />}
+                <span>{savingName ? 'Menyimpan...' : 'Simpan'}</span>
               </button>
             </div>
           </form>

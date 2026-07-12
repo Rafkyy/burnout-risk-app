@@ -1,10 +1,4 @@
-import { User, AssessmentResult, AssessmentInput, RecommendationItem, RiskLevel } from './types';
-
-export const DEFAULT_USER: User = {
-  name: 'Aditia',
-  email: 'aditia.pratama@email.com',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&h=256&q=80',
-};
+import { AssessmentResult, AssessmentInput, RecommendationItem, RiskLevel } from './types';
 
 export const RECOM_TEMPLATES: Omit<RecommendationItem, 'completed'>[] = [
   {
@@ -36,89 +30,6 @@ export const RECOM_TEMPLATES: Omit<RecommendationItem, 'completed'>[] = [
     title: 'Lakukan hobi di luar kerja',
     desc: 'Luangkan waktu untuk kegiatan yang menyenangkan.',
     category: 'Sedang',
-  },
-];
-
-export const DEFAULT_HISTORY: AssessmentResult[] = [
-  {
-    id: 'hist_1',
-    date: '15 Feb 2024',
-    score: 0.18,
-    riskLevel: 'Rendah',
-    input: {
-      jenisKelamin: 'Laki-laki',
-      tipePerusahaan: 'Teknologi',
-      wfhSetup: true,
-      levelJabatan: 1,
-      alokasiSumberDaya: 4,
-      skorKelebihanMental: 1,
-    },
-    shapFactors: [
-      { factor: 'Skor Kelebihan Mental', percentage: 12 },
-      { factor: 'Alokasi Sumber Daya', percentage: 38 },
-      { factor: 'WFH Setup', percentage: 40 },
-    ],
-    recommendations: RECOM_TEMPLATES.map((r, idx) => ({ ...r, completed: idx < 1 })),
-  },
-  {
-    id: 'hist_2',
-    date: '10 Mar 2024',
-    score: 0.82,
-    riskLevel: 'Tinggi',
-    input: {
-      jenisKelamin: 'Laki-laki',
-      tipePerusahaan: 'Teknologi',
-      wfhSetup: false,
-      levelJabatan: 3,
-      alokasiSumberDaya: 1,
-      skorKelebihanMental: 4,
-    },
-    shapFactors: [
-      { factor: 'Skor Kelebihan Mental', percentage: 45 },
-      { factor: 'Alokasi Sumber Daya', percentage: 30 },
-      { factor: 'WFH Setup', percentage: 15 },
-    ],
-    recommendations: RECOM_TEMPLATES.map((r) => ({ ...r, completed: false })),
-  },
-  {
-    id: 'hist_3',
-    date: '18 Apr 2024',
-    score: 0.48,
-    riskLevel: 'Sedang',
-    input: {
-      jenisKelamin: 'Laki-laki',
-      tipePerusahaan: 'Keuangan',
-      wfhSetup: true,
-      levelJabatan: 2,
-      alokasiSumberDaya: 2,
-      skorKelebihanMental: 3,
-    },
-    shapFactors: [
-      { factor: 'Skor Kelebihan Mental', percentage: 35 },
-      { factor: 'Alokasi Sumber Daya', percentage: 25 },
-      { factor: 'WFH Setup', percentage: 18 },
-    ],
-    recommendations: RECOM_TEMPLATES.map((r, idx) => ({ ...r, completed: idx % 2 === 0 })),
-  },
-  {
-    id: 'hist_4',
-    date: '25 Mei 2024',
-    score: 0.25,
-    riskLevel: 'Rendah',
-    input: {
-      jenisKelamin: 'Perempuan',
-      tipePerusahaan: 'Kesehatan',
-      wfhSetup: true,
-      levelJabatan: 1,
-      alokasiSumberDaya: 3,
-      skorKelebihanMental: 2,
-    },
-    shapFactors: [
-      { factor: 'Skor Kelebihan Mental', percentage: 20 },
-      { factor: 'Alokasi Sumber Daya', percentage: 40 },
-      { factor: 'WFH Setup', percentage: 30 },
-    ],
-    recommendations: RECOM_TEMPLATES.map((r, idx) => ({ ...r, completed: idx < 2 })),
   },
 ];
 

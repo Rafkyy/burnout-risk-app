@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { db } from '../firebase';
+import { invalidateMasterDataCache } from '../masterDataService';
 import {
   Settings,
   ChevronLeft,
@@ -48,6 +49,7 @@ interface AdminScreenProps {
 export default function AdminScreen({ onBack }: AdminScreenProps) {
   const [activeTab, setActiveTab] = useState<'threshold' | 'recommendations' | 'users'>('threshold');
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   // Threshold state
@@ -77,6 +79,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
 
   const loadMasterData = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       // Load thresholds
       const threshSnap = await get(ref(db, 'masterData/thresholds'));
@@ -113,7 +116,10 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
         setUsers([]);
       }
     } catch (err) {
-      console.error('❌ Gagal load master data:', err);
+      console.error('Gagal load master data:', err);
+      setLoadError(
+        'Gagal memuat data dari Firebase. Pastikan akun Anda terdaftar sebagai admin (node /admins/{uid} = true) dan rules database sudah ter-deploy.'
+      );
     } finally {
       setLoading(false);
     }
@@ -126,6 +132,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     setSaveStatus('saving');
     try {
       await set(ref(db, 'masterData/thresholds'), thresholds);
+      invalidateMasterDataCache();
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch {
@@ -143,6 +150,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       const recObj: Record<string, RecommendationTemplate> = {};
       recommendations.forEach((r) => { recObj[r.id] = r; });
       await set(ref(db, 'masterData/recommendations'), recObj);
+      invalidateMasterDataCache();
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch {
@@ -236,6 +244,13 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
           ADMIN
         </span>
       </div>
+
+      {loadError && (
+        <div className="mx-4 mt-3 p-3 bg-rose-950/40 text-rose-300 border border-rose-500/20 text-[11px] rounded-xl font-medium flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{loadError}</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-white/5 shrink-0 bg-elegant-panel">

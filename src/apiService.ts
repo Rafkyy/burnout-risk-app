@@ -4,7 +4,7 @@
 // ============================================================
 
 import { AssessmentInput, AssessmentResult, RecommendationItem, ShapFactor, RiskLevel } from './types';
-import { RECOM_TEMPLATES } from './data';
+import { RECOM_TEMPLATES, calculateAssessmentResult } from './data';
 
 // ⚠️ GANTI dengan URL backend kamu setelah deploy ke Railway
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://burnout-api.up.railway.app';
@@ -171,6 +171,9 @@ export async function predictBurnout(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(apiInput),
+      // Timeout 15 detik: cukup untuk cold-start Railway, tapi tidak
+      // membiarkan layar loading menggantung tanpa batas di koneksi mobile.
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -187,7 +190,6 @@ export async function predictBurnout(
     console.error('❌ Gagal memanggil API backend:', error);
     // Fallback ke kalkulasi lokal jika API tidak tersedia
     console.warn('⚠️ Menggunakan kalkulasi lokal sebagai fallback...');
-    const { calculateAssessmentResult } = await import('./data');
     return calculateAssessmentResult(input, id);
   }
 }

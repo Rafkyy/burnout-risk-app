@@ -8,7 +8,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser,
 } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import { ref, set, update } from 'firebase/database';
 import { auth, googleProvider, db } from './firebase';
 import { User } from './types';
 
@@ -42,22 +42,34 @@ async function saveAuthProfile(fbUser: FirebaseUser, nameOverride?: string): Pro
     lastLogin: new Date().toISOString(),
   };
   await set(ref(db, `users/${fbUser.uid}`), profile);
-  console.log('✅ Profil auth tersimpan ke Firebase:', profile.email);
 }
 
-function isAndroidWebView(): boolean {
+// ============================================================
+// Deteksi lingkungan WebView (APK wrapper).
+// Google memblokir OAuth di dalam WebView (error: disallowed_useragent),
+// jadi tombol "Masuk dengan Google" harus disembunyikan di sini
+// dan user diarahkan pakai email-password.
+// ============================================================
+export function isEmbeddedWebView(): boolean {
   const ua = navigator.userAgent || '';
-  return /wv/.test(ua) && /Android/.test(ua);
+  const isAndroidWV = /wv/.test(ua) && /Android/.test(ua);
+  // iOS WKWebView: ada AppleWebKit tapi tanpa Safari di UA
+  const isIOSWV = /iPhone|iPad|iPod/.test(ua) && /AppleWebKit/.test(ua) && !/Safari/.test(ua);
+  return isAndroidWV || isIOSWV;
 }
+
 // ── Google Login ──
 export async function signInWithGoogle(): Promise<User> {
-  // Tolak jika di Android WebView
-  if (isAndroidWebView()) {
-    throw new Error('Login Google tidak tersedia di Android. Gunakan email dan password.');
+  if (isEmbeddedWebView()) {
+    // Seharusnya tidak pernah terpanggil karena tombolnya disembunyikan,
+    // tapi tetap dijaga sebagai lapisan terakhir.
+    throw new Error(
+      'Login Google tidak didukung di dalam aplikasi ini (kebijakan Google untuk WebView). Silakan gunakan email dan password.'
+    );
   }
   const result = await signInWithPopup(auth, googleProvider);
-    await saveAuthProfile(result.user);
-    return toAppUser(result.user);
+  await saveAuthProfile(result.user);
+  return toAppUser(result.user);
 }
 
 // ── Email & Password: Masuk ──
@@ -77,6 +89,18 @@ export async function signUpWithEmail(
   await updateProfile(result.user, { displayName: name });
   await saveAuthProfile(result.user, name);
   return toAppUser(result.user, name);
+}
+
+// ── Update nama tampilan (dipakai halaman Profil) ──
+// Tersimpan permanen di Firebase Auth + node users/{uid}.
+export async function updateDisplayName(name: string): Promise<User> {
+  const fbUser = auth.currentUser;
+  if (!fbUser) throw new Error('Sesi login berakhir. Silakan masuk kembali.');
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error('Nama tidak boleh kosong.');
+  await updateProfile(fbUser, { displayName: trimmed });
+  await update(ref(db, `users/${fbUser.uid}`), { displayName: trimmed });
+  return toAppUser(fbUser, trimmed);
 }
 
 // ── Lupa Password ──

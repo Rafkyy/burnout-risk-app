@@ -1,24 +1,17 @@
-<<<<<<< HEAD
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Burnout Risk App — Lumina Analytica
 
-# Run and deploy your AI Studio app
+Aplikasi analisis risiko burnout karyawan (React + Vite + Firebase + FastAPI ML).
 
-This contains everything you need to run your app locally.
+- Frontend: React 19, Vite, Tailwind 4, Firebase Auth + Realtime Database
+- Backend ML: FastAPI + Random Forest + SHAP (folder `backend/`)
+- Responsif: mode desktop (landing + simulator) dan mode mobile/APK (full-screen)
 
-View your app in AI Studio: https://ai.studio/apps/199928c9-f481-4b29-9a38-a85525490a61
+## Menjalankan Lokal
 
-## Run Locally
+1. `npm install`
+2. Salin `.env.example` menjadi `.env`, isi semua nilai Firebase & backend
+3. `npm run dev`
 
-**Prerequisites:**  Node.js
+## Deploy
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-=======
-# burnout-risk-app
->>>>>>> f505045077f1e94c3322c7654625e3baccbb76f8
+Lihat **PANDUAN_DEPLOY.md** untuk langkah lengkap (Firebase rules, set admin, backend Railway, build APK).

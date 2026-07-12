@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User as UserIcon, Eye, EyeOff, Globe, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isEmbeddedWebView } from '../authService';
 
 export default function LoginScreen() {
+  // Google memblokir OAuth di dalam WebView APK (disallowed_useragent),
+  // jadi tombol Google disembunyikan di lingkungan tersebut.
+  const inWebView = isEmbeddedWebView();
   const { loginWithGoogle, loginWithEmail, registerWithEmail, forgotPassword } = useAuth();
 
   const [isRegistering, setIsRegistering] = useState(false);
@@ -200,22 +204,33 @@ export default function LoginScreen() {
             )}
           </form>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/10"></div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">atau</span>
-            <div className="flex-1 h-px bg-white/10"></div>
-          </div>
+          {!inWebView && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">atau</span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
 
-          <button
-            type="button"
-            id="btn-google-login"
-            onClick={handleGoogleLogin}
-            disabled={isGoogleLoading}
-            className="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-slate-100 active:scale-98 shadow-md transition flex items-center justify-center gap-2.5 cursor-pointer text-xs disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isGoogleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4 text-elegant-gold-dark" />}
-            <span>{isGoogleLoading ? 'Menghubungkan ke Google...' : 'Masuk dengan Google'}</span>
-          </button>
+              <button
+                type="button"
+                id="btn-google-login"
+                onClick={handleGoogleLogin}
+                disabled={isGoogleLoading}
+                className="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-slate-100 active:scale-98 shadow-md transition flex items-center justify-center gap-2.5 cursor-pointer text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isGoogleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4 text-elegant-gold-dark" />}
+                <span>{isGoogleLoading ? 'Menghubungkan ke Google...' : 'Masuk dengan Google'}</span>
+              </button>
+            </>
+          )}
+
+          {inWebView && (
+            <p className="text-center text-[10px] text-slate-500 leading-relaxed px-2">
+              Login Google tidak tersedia di dalam aplikasi (kebijakan keamanan Google).
+              Silakan masuk atau daftar menggunakan email dan password.
+            </p>
+          )}
 
           <div className="text-center pt-1">
             <button
