@@ -30,6 +30,14 @@ interface RecommendationTemplate {
   category: string;
 }
 
+interface UserData {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  lastLogin: string;
+}
+
 interface AdminScreenProps {
   onBack: () => void;
 }
@@ -57,8 +65,8 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     { id: 'rec_5', title: 'Lakukan hobi di luar kerja', desc: 'Luangkan waktu untuk kegiatan yang menyenangkan.', category: 'Sedang' },
   ]);
 
-  // User list state
-  const [users, setUsers] = useState<{ uid: string; name: string; email: string }[]>([]);
+  // User list state — pakai struktur UID sebagai key
+  const [users, setUsers] = useState<UserData[]>([]);
 
   // ============================================================
   // Load data dari Firebase saat mount
@@ -83,16 +91,26 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
         setRecommendations(Object.values(data));
       }
 
-      // Load users
+      // Load users — struktur: /users/{uid}/{ displayName, email, photoURL, lastLogin }
       const usersSnap = await get(ref(db, 'users'));
       if (usersSnap.exists()) {
-        const data = usersSnap.val() as Record<string, { name: string; email: string }>;
+        const data = usersSnap.val() as Record<string, UserData>;
         const userList = Object.entries(data).map(([uid, u]) => ({
           uid,
-          name: u.name,
-          email: u.email,
+          displayName: u.displayName || u.email || 'Pengguna',
+          email: u.email || '',
+          photoURL: u.photoURL || '',
+          lastLogin: u.lastLogin || '',
         }));
+        // Urutkan berdasarkan lastLogin terbaru
+        userList.sort((a, b) =>
+          new Date(b.lastLogin).getTime() - new Date(a.lastLogin).getTime()
+        );
         setUsers(userList);
+        console.log('✅ Users dimuat:', userList.length, 'pengguna');
+      } else {
+        console.warn('⚠️ Node /users/ kosong di Firebase');
+        setUsers([]);
       }
     } catch (err) {
       console.error('❌ Gagal load master data:', err);
@@ -133,9 +151,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     }
   };
 
-  // ============================================================
-  // Tambah rekomendasi baru
-  // ============================================================
   const addRecommendation = () => {
     const newRec: RecommendationTemplate = {
       id: `rec_${Date.now()}`,
@@ -146,20 +161,33 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     setRecommendations((prev) => [...prev, newRec]);
   };
 
-  // ============================================================
-  // Hapus rekomendasi
-  // ============================================================
   const deleteRecommendation = (id: string) => {
     setRecommendations((prev) => prev.filter((r) => r.id !== id));
   };
 
-  // ============================================================
-  // Update field rekomendasi
-  // ============================================================
   const updateRecommendation = (id: string, field: keyof RecommendationTemplate, value: string) => {
     setRecommendations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
     );
+  };
+
+  // ============================================================
+  // Format tanggal lastLogin
+  // ============================================================
+  const formatLastLogin = (isoString: string): string => {
+    if (!isoString) return '-';
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '-';
+    }
   };
 
   // ============================================================
@@ -247,12 +275,9 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider">Konfigurasi Threshold Risiko</h3>
                   {renderSaveButton(saveThresholds)}
                 </div>
-
                 <p className="text-[11px] text-slate-400">
-                  Atur batas skor burn rate untuk setiap kategori risiko. Perubahan ini berlaku untuk semua prediksi baru.
+                  Atur batas skor burn rate untuk setiap kategori risiko.
                 </p>
-
-                {/* Threshold Cards */}
                 <div className="space-y-3">
                   {/* Low */}
                   <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 space-y-2">
@@ -264,17 +289,12 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-slate-400 w-20">Batas atas:</span>
                       <input
-                        type="range"
-                        min="0.10"
-                        max="0.50"
-                        step="0.01"
+                        type="range" min="0.10" max="0.50" step="0.01"
                         value={thresholds.low_max}
                         onChange={(e) => setThresholds((prev) => ({ ...prev, low_max: parseFloat(e.target.value) }))}
                         className="flex-1 accent-emerald-400 cursor-pointer"
                       />
-                      <span className="text-xs font-bold text-emerald-400 w-10 text-right">
-                        {thresholds.low_max.toFixed(2)}
-                      </span>
+                      <span className="text-xs font-bold text-emerald-400 w-10 text-right">{thresholds.low_max.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -290,17 +310,12 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-slate-400 w-20">Batas atas:</span>
                       <input
-                        type="range"
-                        min="0.50"
-                        max="0.85"
-                        step="0.01"
+                        type="range" min="0.50" max="0.85" step="0.01"
                         value={thresholds.medium_max}
                         onChange={(e) => setThresholds((prev) => ({ ...prev, medium_max: parseFloat(e.target.value) }))}
                         className="flex-1 accent-amber-400 cursor-pointer"
                       />
-                      <span className="text-xs font-bold text-amber-400 w-10 text-right">
-                        {thresholds.medium_max.toFixed(2)}
-                      </span>
+                      <span className="text-xs font-bold text-amber-400 w-10 text-right">{thresholds.medium_max.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -334,11 +349,6 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     {renderSaveButton(saveRecommendations)}
                   </div>
                 </div>
-
-                <p className="text-[11px] text-slate-400">
-                  Kelola daftar rekomendasi yang ditampilkan kepada karyawan berdasarkan level risiko.
-                </p>
-
                 <div className="space-y-3">
                   {recommendations.map((rec) => (
                     <div key={rec.id} className="bg-elegant-card border border-white/5 rounded-xl p-3 space-y-2">
@@ -402,13 +412,19 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                     </div>
                   ) : (
                     users.map((u) => (
-                      <div key={u.uid} className="bg-elegant-card border border-white/5 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-elegant-gold/20 flex items-center justify-center text-elegant-gold font-bold text-sm">
-                          {u.name.charAt(0).toUpperCase()}
+                      <div key={u.uid} className="bg-elegant-card border border-white/5 rounded-xl p-3 space-y-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-elegant-gold/20 flex items-center justify-center text-elegant-gold font-bold text-sm shrink-0">
+                            {(u.displayName || u.email || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{u.displayName || 'Pengguna'}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{u.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-white">{u.name}</p>
-                          <p className="text-[10px] text-slate-400">{u.email}</p>
+                        <div className="flex items-center justify-between pl-11">
+                          <p className="text-[9px] text-slate-500 font-mono truncate">UID: {u.uid.slice(0, 12)}...</p>
+                          <p className="text-[9px] text-slate-500">Login: {formatLastLogin(u.lastLogin)}</p>
                         </div>
                       </div>
                     ))
